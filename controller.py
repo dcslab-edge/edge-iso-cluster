@@ -16,7 +16,7 @@ import libs
 from libs.isolation import NextStep
 from libs.isolation.isolators import Isolator
 from libs.isolation.policies import AggressiveWViolationPolicy, IsolationPolicy
-from libs.isolation.swapper import SwapIsolator
+#from libs.isolation.swapper import SwapIsolator
 from pending_queue import PendingQueue
 from polling_thread import PollingThread
 
@@ -37,7 +37,7 @@ class Controller:
         self._polling_thread = PollingThread(metric_buf_size, self._pending_queue)
 
         # Swapper init
-        self._swapper: SwapIsolator = SwapIsolator(self._isolation_groups)
+        #self._swapper: SwapIsolator = SwapIsolator(self._isolation_groups)
 
     def _isolate_workloads(self) -> None:
         logger = logging.getLogger(__name__)

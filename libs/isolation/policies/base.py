@@ -20,9 +20,10 @@ class IsolationPolicy(metaclass=ABCMeta):
         self._bg_wl = bg_wl
 
         self._isolator_map: Dict[Type[Isolator], Isolator] = dict((
-            (CacheIsolator, CacheIsolator(self._fg_wl, self._bg_wl)),
-            (AffinityIsolator, AffinityIsolator(self._fg_wl, self._bg_wl)),
-            (SchedIsolator, SchedIsolator(self._fg_wl, self._bg_wl)),
+            #(CacheIsolator, CacheIsolator(self._fg_wl, self._bg_wl)),
+            #(AffinityIsolator, AffinityIsolator(self._fg_wl, self._bg_wl)),
+            #(SchedIsolator, SchedIsolator(self._fg_wl, self._bg_wl)),
+            (MemoryIsolator, MemoryIsolator(self._fg_wl, self._bg_wl)),
             (MemoryIsolator, MemoryIsolator(self._fg_wl, self._bg_wl)),
         ))
         self._cur_isolator: Isolator = IsolationPolicy._IDLE_ISOLATOR
