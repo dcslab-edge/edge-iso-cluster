@@ -4,8 +4,15 @@ from statistics import mean
 from typing import Iterable
 
 from cpuinfo import cpuinfo
+from ..utils.machine_type import MachineChecker, NodeType
 
-LLC_SIZE = int(cpuinfo.get_cpu_info()['l3_cache_size'].split()[0]) * 1024
+NODE_TYPE = MachineChecker.get_node_type()
+
+#LLC_SIZE = int(cpuinfo.get_cpu_info()['l3_cache_size'].split()[0]) * 1024  # Xeon Server (BC5) LLC (L3 Cache)
+if NODE_TYPE == NodeType.IntegratedGPU:
+    LLC_SIZE = int(cpuinfo.get_cpu_info()['l2_cache_size'].split()[0]) * 1024   # JETSON TX2 LLC (L2Cache)
+elif NODE_TYPE == NodeType.CPU:
+    LLC_SIZE = int(cpuinfo.get_cpu_info()['l3_cache_size'].split()[0]) * 1024  # Desktop (SDC) LLC (L3Cache)
 
 
 class BasicMetric:

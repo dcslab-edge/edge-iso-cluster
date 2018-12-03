@@ -2,4 +2,4 @@
 
 from .dvfs import DVFS
 from .gpu_dvfs import GPUDVFS
-from .resctrl import ResCtrl
+#from .resctrl import ResCtrl
