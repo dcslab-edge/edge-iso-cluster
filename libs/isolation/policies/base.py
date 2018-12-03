@@ -5,10 +5,12 @@ from abc import ABCMeta, abstractmethod
 from typing import ClassVar, Dict, Tuple, Type
 
 from .. import ResourceType
-from ..isolators import CacheIsolator, IdleIsolator, Isolator, MemoryIsolator, SchedIsolator
-from ..isolators.affinity import AffinityIsolator
+from ..isolators import Isolator, IdleIsolator, CycleLimitIsolator, FreqThrottleIsolator, SchedIsolator
+#from ..isolators import CacheIsolator, IdleIsolator, Isolator, MemoryIsolator, SchedIsolator
+#from ..isolators.affinity import AffinityIsolator
 from ...metric_container.basic_metric import BasicMetric, MetricDiff
 from ...workload import Workload
+from ...utils.machine_type import MachineChecker, NodeType
 
 
 class IsolationPolicy(metaclass=ABCMeta):
@@ -19,15 +21,19 @@ class IsolationPolicy(metaclass=ABCMeta):
         self._fg_wl = fg_wl
         self._bg_wl = bg_wl
 
-        self._isolator_map: Dict[Type[Isolator], Isolator] = dict((
-            #(CacheIsolator, CacheIsolator(self._fg_wl, self._bg_wl)),
-            #(AffinityIsolator, AffinityIsolator(self._fg_wl, self._bg_wl)),
-            #(SchedIsolator, SchedIsolator(self._fg_wl, self._bg_wl)),
-            (MemoryIsolator, MemoryIsolator(self._fg_wl, self._bg_wl)),
-            (MemoryIsolator, MemoryIsolator(self._fg_wl, self._bg_wl)),
-        ))
+        self._node_type = MachineChecker.get_node_type()
+        # TODO: Discrete GPU case
+        if self._node_type == NodeType.CPU:
+            self._isolator_map: Dict[Type[Isolator], Isolator] = dict((
+                (CycleLimitIsolator, CycleLimitIsolator(self._fg_wl, self._bg_wl)),
+                (FreqThrottleIsolator, FreqThrottleIsolator(self._fg_wl, self._bg_wl)),
+            ))
+        if self._node_type == NodeType.IntegratedGPU:
+            self._isolator_map: Dict[Type[Isolator], Isolator] = dict((
+                (CycleLimitIsolator, CycleLimitIsolator(self._fg_wl, self._bg_wl)),
+                (SchedIsolator, SchedIsolator(self._fg_wl, self._bg_wl)),
+            ))
         self._cur_isolator: Isolator = IsolationPolicy._IDLE_ISOLATOR
-
         self._in_solorun_profile: bool = False
         self._cached_fg_num_threads: int = fg_wl.number_of_threads
         self._solorun_verify_violation_count: int = 0

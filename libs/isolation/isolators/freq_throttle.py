@@ -17,7 +17,6 @@ class FreqThrottleIsolator(Isolator):
         # Assumption: FG is latency-sensitive process (CPU) and BG is compute-intensive process (GPU)
         self._cur_step: int = DVFS.MAX_IDX
         self._stored_config: Optional[int] = None
-        #self._cpufreq_range = DVFS.get_freq_range()
         self._gpufreq_range = GPUDVFS.get_freq_range()
 
     @classmethod
