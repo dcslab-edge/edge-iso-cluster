@@ -73,7 +73,7 @@ class MachineChecker:
         tegra_path = Path('/proc/device-tree/compatible')
         if tegra_path.exists():
             with tegra_path.open() as fp:
-                tegra_info = fp.readable()
+                tegra_info = fp.readline()
                 if 'tegra186' in tegra_info:
                     gpu_type = 'integrated'
 
