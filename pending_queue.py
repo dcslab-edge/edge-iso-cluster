@@ -26,10 +26,12 @@ class PendingQueue(Sized):
         logger = logging.getLogger('monitoring.pending_queue')
         logger.info(f'{workload} is ready for active')
 
-        ready_queue = self._ready_queue[workload.cur_socket_id()]
+        # FIXME: hard coded : Workload always locate on the socket 0
+        # ready_queue = self._ready_queue[workload.cur_socket_id()]
+        ready_queue = self._ready_queue[0]
         ready_queue.append(workload)
 
-        # FIXME: hard coded
+        # FIXME: hard coded (The below code is for multi-socket initial placements)
         if len(ready_queue) is 2 and ready_queue[0].wl_type != ready_queue[1].wl_type:
             if ready_queue[0].wl_type == 'fg':
                 fg = ready_queue[0]
@@ -41,7 +43,8 @@ class PendingQueue(Sized):
             new_group = self._policy_type(fg, bg)
             self._pending_list.append(new_group)
 
-            self._ready_queue[workload.cur_socket_id()] = list()
+            self._ready_queue[0] = list()
+            #self._ready_queue[workload.cur_socket_id()] = list()
 
     def pop(self) -> IsolationPolicy:
         if len(self) is 0:
