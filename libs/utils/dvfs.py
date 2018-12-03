@@ -1,15 +1,15 @@
 # coding: UTF-8
 
 import subprocess
-from pathlib import Path
 from typing import ClassVar, Iterable
 
 from libs.utils.cgroup import CpuSet
+from libs.utils.machine_type import ArchType, MachineChecker
 
 
 class DVFS:
     # FREQ_RANGE_INDEX : 0 ~ 11
-    ARCH = 'jetson_tx2'
+    CPU_TYPE = MachineChecker.get_cpu_arch_type()
     # ARCH = 'desktop'
     FREQ_RANGE = list()
     JETSONTX2_CPU_FREQ_RANGE = [345600, 499200, 652800, 806400, 960000, 1113600, 1267200, 1420800,
@@ -20,11 +20,11 @@ class DVFS:
     MIN_IDX: ClassVar[int] = 0
     STEP_IDX: ClassVar[int] = 1  # STEP is defined with its index
     MAX_IDX: ClassVar[int] = 11
-    if ARCH == 'jetson_tx2':
+    if CPU_TYPE == ArchType.AARCH64:
         MIN: ClassVar[int] = JETSONTX2_CPU_FREQ_RANGE[0]
         MAX: ClassVar[int] = JETSONTX2_CPU_FREQ_RANGE[11]
         FREQ_RANGE = JETSONTX2_CPU_FREQ_RANGE
-    elif ARCH == 'desktop':
+    elif CPU_TYPE == ArchType.X86_64:
         MIN: ClassVar[int] = DESKTOP_CPU_FREQ_RANGE[0]
         MAX: ClassVar[int] = DESKTOP_CPU_FREQ_RANGE[11]
         FREQ_RANGE = DESKTOP_CPU_FREQ_RANGE
