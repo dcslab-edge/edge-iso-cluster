@@ -32,6 +32,8 @@ class BasicMetric:
                 mean(metric._llc_miss for metric in metrics),
                 mean(metric._instructions for metric in metrics),
                 mean(metric._cycles for metric in metrics),
+                mean(metric._gpu_core_util for metric in metrics),
+                mean(metric._gpu_mem_util for metric in metrics),
                 mean(metric._interval for metric in metrics),
         )
 
