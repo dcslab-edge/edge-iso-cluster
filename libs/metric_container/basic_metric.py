@@ -16,45 +16,34 @@ elif NODE_TYPE == NodeType.CPU:
 
 
 class BasicMetric:
-    def __init__(self, l2miss, l3miss, inst, cycles, stall_cycles, wall_cycles, intra_coh,
-                 inter_coh, llc_size, local_mem, remote_mem, interval):
-        self._l2miss = l2miss
-        self._l3miss = l3miss
+    def __init__(self, llc_reference, llc_miss, inst, cycles, interval):
+        self._llc_reference = llc_reference
+        self._llc_miss = llc_miss
         self._instructions = inst
         self._cycles = cycles
-        self._stall_cycles = stall_cycles
-        self._wall_cycles = wall_cycles
-        self._intra_coh = intra_coh
-        self._inter_coh = inter_coh
-        self._llc_size = llc_size
-        self._local_mem = local_mem
-        self._remote_mem = remote_mem
         self._interval = interval
 
     @classmethod
     def calc_avg(cls, metrics: Iterable['BasicMetric']) -> 'BasicMetric':
         return BasicMetric(
-                mean(metric._l2miss for metric in metrics),
-                mean(metric._l3miss for metric in metrics),
+                mean(metric._llc_reference for metric in metrics),
+                mean(metric._llc_miss for metric in metrics),
                 mean(metric._instructions for metric in metrics),
                 mean(metric._cycles for metric in metrics),
-                mean(metric._stall_cycles for metric in metrics),
-                mean(metric._wall_cycles for metric in metrics),
-                mean(metric._intra_coh for metric in metrics),
-                mean(metric._inter_coh for metric in metrics),
-                mean(metric._llc_size for metric in metrics),
-                mean(metric._local_mem for metric in metrics),
-                mean(metric._remote_mem for metric in metrics),
                 mean(metric._interval for metric in metrics),
         )
 
     @property
-    def l2miss(self):
-        return self._l2miss
+    def llc_reference(self):
+        return self._llc_reference
 
     @property
-    def l3miss(self):
-        return self._l3miss
+    def llc_miss(self):
+        return self._llc_miss
+
+    @property
+    def llc_miss_ps(self) -> float:
+        return self._llc_miss * (1000 / self._interval)
 
     @property
     def instruction(self):
@@ -65,85 +54,20 @@ class BasicMetric:
         return self._instructions * (1000 / self._interval)
 
     @property
-    def wall_cycles(self):
-        return self._wall_cycles
-
-    @property
-    def cycles(self):
-        return self._cycles
-
-    @property
-    def stall_cycle(self):
-        return self._stall_cycles
-
-    @property
-    def intra_coh(self):
-        return self._intra_coh
-
-    @property
-    def inter_coh(self):
-        return self._inter_coh
-
-    @property
-    def llc_size(self):
-        return self._llc_size
-
-    @property
-    def local_mem(self) -> float:
-        return self._local_mem
-
-    @property
-    def local_mem_ps(self) -> float:
-        return self._local_mem * (1000 / self._interval)
-
-    @property
-    def remote_mem(self):
-        return self._remote_mem
-
-    @property
-    def remote_mem_ps(self) -> float:
-        return self._remote_mem * (1000 / self._interval)
-
-    @property
     def ipc(self) -> float:
         return self._instructions / self._cycles
 
     @property
-    def intra_coh_ratio(self) -> float:
-        return self._intra_coh / self._l2miss if self._l2miss != 0 else 0
+    def llc_miss_ratio(self) -> float:
+        return self._llc_miss / self._llc_reference if self._llc_reference != 0 else 0
 
     @property
-    def inter_coh_ratio(self) -> float:
-        return self._inter_coh / self._l2miss if self._l2miss != 0 else 0
-
-    @property
-    def coh_ratio(self) -> float:
-        return (self._inter_coh + self._intra_coh) / self._l2miss if self._l2miss != 0 else 0
-
-    @property
-    def l3miss_ratio(self) -> float:
-        return self._l3miss / self._l2miss if self._l2miss != 0 else 0
-
-    @property
-    def l3hit_ratio(self) -> float:
-        return 1 - self._l3miss / self._l2miss if self._l2miss != 0 else 0
-
-    @property
-    def l3_util(self) -> float:
-        return self._llc_size / LLC_SIZE
-
-    @property
-    def l3_intensity(self) -> float:
-        return self.l3_util * self.l3hit_ratio
-
-    @property
-    def mem_intensity(self) -> float:
-        return self.l3_util * self.l3miss_ratio
+    def llc_hit_ratio(self) -> float:
+        return 1 - self._llc_miss / self._llc_miss if self._llc_reference != 0 else 0
 
     def __repr__(self) -> str:
         return ', '.join(map(str, (
-            self._l2miss, self._l3miss, self._instructions, self._cycles, self._stall_cycles, self._wall_cycles,
-            self._intra_coh, self._inter_coh, self._llc_size, self._local_mem, self._remote_mem, self._interval)))
+            self._llc_reference, self._llc_miss, self._instructions, self._cycles, self._interval)))
 
 
 class MetricDiff:
@@ -151,37 +75,37 @@ class MetricDiff:
     _MAX_MEM_BANDWIDTH_PS = 68 * 1024 * 1024 * 1024
 
     def __init__(self, curr: BasicMetric, prev: BasicMetric, core_norm: float = 1) -> None:
-        self._l3_hit_ratio = curr.l3hit_ratio - prev.l3hit_ratio
+        self._llc_hit_ratio = curr.llc_hit_ratio - prev.llc_hit_ratio
 
-        if curr.local_mem_ps == 0:
-            if prev.local_mem_ps == 0:
-                self._local_mem_ps = 0
+        if curr.llc_miss_ps == 0:
+            if prev.llc_miss_ps == 0:
+                self._llc_miss_ps = 0
             else:
-                self._local_mem_ps = prev.local_mem_ps / self._MAX_MEM_BANDWIDTH_PS
-        elif prev.local_mem_ps == 0:
+                self._llc_miss_ps = prev.llc_miss_ps / self._MAX_MEM_BANDWIDTH_PS
+        elif prev.llc_miss_ps == 0:
             # TODO: is it fair?
-            self._local_mem_ps = -curr.local_mem_ps / self._MAX_MEM_BANDWIDTH_PS
+            self._llc_miss_ps = -curr.llc_miss_ps / self._MAX_MEM_BANDWIDTH_PS
         else:
-            self._local_mem_ps = curr.local_mem_ps / (prev.local_mem_ps * core_norm) - 1
+            self._llc_miss_ps = curr.llc_miss_ps / (prev.llc_miss_ps * core_norm) - 1
 
         self._instruction_ps = curr.instruction_ps / (prev.instruction_ps * core_norm) - 1
 
     @property
-    def l3_hit_ratio(self) -> float:
-        return self._l3_hit_ratio
+    def llc_hit_ratio(self) -> float:
+        return self._llc_hit_ratio
 
     @property
     def local_mem_util_ps(self) -> float:
-        return self._local_mem_ps
+        return self._llc_miss_ps
 
     @property
     def instruction_ps(self) -> float:
         return self._instruction_ps
 
     def verify(self) -> bool:
-        return self._local_mem_ps <= 1 and self._instruction_ps <= 1
+        return self._llc_miss_ps <= 1 and self._instruction_ps <= 1
 
     def __repr__(self) -> str:
-        return f'L3 hit ratio diff: {self._l3_hit_ratio:>6.03f}, ' \
-               f'Local Memory access diff: {self._local_mem_ps:>6.03f}, ' \
+        return f'L3 hit ratio diff: {self._llc_hit_ratio:>6.03f}, ' \
+               f'Local Memory access diff: {self._llc_miss_ps:>6.03f}, ' \
                f'Instructions per sec. diff: {self._instruction_ps:>6.03f}'

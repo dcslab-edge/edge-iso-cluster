@@ -68,7 +68,7 @@ class IsolationPolicy(metaclass=ABCMeta):
         logger.info(f'foreground : {metric_diff}')
         logger.info(f'background : {self._bg_wl.calc_metric_diff()}')
 
-        resources = ((ResourceType.CACHE, metric_diff.l3_hit_ratio),
+        resources = ((ResourceType.CACHE, metric_diff.llc_hit_ratio),
                      (ResourceType.MEMORY, metric_diff.local_mem_util_ps))
 
         if all(v > 0 for m, v in resources):
