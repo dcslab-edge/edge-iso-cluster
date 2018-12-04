@@ -16,11 +16,13 @@ elif NODE_TYPE == NodeType.CPU:
 
 
 class BasicMetric:
-    def __init__(self, llc_reference, llc_miss, inst, cycles, interval):
+    def __init__(self, llc_reference, llc_miss, inst, cycles, gpu_core_util, gpu_mem_util, interval):
         self._llc_reference = llc_reference
         self._llc_miss = llc_miss
         self._instructions = inst
         self._cycles = cycles
+        self._gpu_core_util = gpu_core_util
+        self._gpu_mem_util = gpu_mem_util
         self._interval = interval
 
     @classmethod
@@ -40,6 +42,14 @@ class BasicMetric:
     @property
     def llc_miss(self):
         return self._llc_miss
+
+    @property
+    def gpu_core_util(self):
+        return self._gpu_core_util
+
+    @property
+    def gpu_mem_util(self):
+        return self._gpu_mem_util
 
     @property
     def llc_miss_ps(self) -> float:
