@@ -1,20 +1,41 @@
 # coding: UTF-8
 
 import subprocess
-from pathlib import Path
 from typing import ClassVar, Iterable
 
 from libs.utils.cgroup import CpuSet
+from libs.utils.machine_type import ArchType, MachineChecker
 
 
 class DVFS:
-    MIN: ClassVar[int] = int(Path('/sys/devices/system/cpu/cpu0/cpufreq/cpuinfo_min_freq').read_text())
-    STEP: ClassVar[int] = 100000
-    MAX: ClassVar[int] = int(Path('/sys/devices/system/cpu/cpu0/cpufreq/cpuinfo_max_freq').read_text())
+    # FREQ_RANGE_INDEX : 0 ~ 11
+    CPU_TYPE = MachineChecker.get_cpu_arch_type()
+    # ARCH = 'desktop'
+    FREQ_RANGE = list()
+    JETSONTX2_CPU_FREQ_RANGE = [345600, 499200, 652800, 806400, 960000, 1113600, 1267200, 1420800,
+                                1574400, 1728000, 1881600, 2035200]
+    DESKTOP_CPU_FREQ_RANGE = [345600, 499200, 652800, 806400, 960000, 1113600, 1267200, 1420800,
+                              1574400, 1728000, 1881600, 2035200] # SDC nodes
+    # TODO: DESKTOP_CPU_FREQ_RANGE should be initialized (SDC Node freq_driver is now intel_pstate..)
+    MIN_IDX: ClassVar[int] = 0
+    STEP_IDX: ClassVar[int] = 1  # STEP is defined with its index
+    MAX_IDX: ClassVar[int] = 11
+    if CPU_TYPE == ArchType.AARCH64:
+        MIN: ClassVar[int] = JETSONTX2_CPU_FREQ_RANGE[0]
+        MAX: ClassVar[int] = JETSONTX2_CPU_FREQ_RANGE[11]
+        FREQ_RANGE = JETSONTX2_CPU_FREQ_RANGE
+    elif CPU_TYPE == ArchType.X86_64:
+        MIN: ClassVar[int] = DESKTOP_CPU_FREQ_RANGE[0]
+        MAX: ClassVar[int] = DESKTOP_CPU_FREQ_RANGE[11]
+        FREQ_RANGE = DESKTOP_CPU_FREQ_RANGE
 
     def __init__(self, group_name):
         self._group_name: str = group_name
         self._cur_cgroup = CpuSet(self._group_name)
+
+    @staticmethod
+    def get_freq_range():
+        return DVFS.FREQ_RANGE
 
     def set_freq_cgroup(self, target_freq: int):
         """

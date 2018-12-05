@@ -8,7 +8,7 @@ import psutil
 
 from .metric_container.basic_metric import BasicMetric, MetricDiff
 from .solorun_data.datas import data_map
-from .utils import DVFS, ResCtrl, numa_topology
+from .utils import DVFS, GPUDVFS  # , ResCtrl, numa_topology
 from .utils.cgroup import Cpu, CpuSet
 
 
@@ -31,8 +31,9 @@ class Workload:
 
         self._cgroup_cpuset = CpuSet(self.group_name)
         self._cgroup_cpu = Cpu(self.group_name)
-        self._resctrl = ResCtrl(self.group_name)
+        #self._resctrl = ResCtrl(self.group_name)
         self._dvfs = DVFS(self.group_name)
+        self._gpu_dvfs = GPUDVFS(self.group_name)
 
         # This variable is used to contain the recent avg. status
         self._avg_solorun_data: Optional[BasicMetric] = None
@@ -57,13 +58,17 @@ class Workload:
     def cgroup_cpu(self) -> Cpu:
         return self._cgroup_cpu
 
-    @property
-    def resctrl(self) -> ResCtrl:
-        return self._resctrl
+    # @property
+    # def resctrl(self) -> ResCtrl:
+    #     return self._resctrl
 
     @property
     def dvfs(self) -> DVFS:
         return self._dvfs
+
+    @property
+    def gpu_dvfs(self) -> GPUDVFS:
+        return self._gpu_dvfs
 
     @property
     def name(self) -> str:
@@ -153,15 +158,16 @@ class Workload:
         except psutil.NoSuchProcess:
             return tuple()
 
+    """
     def cur_socket_id(self) -> int:
         sockets = frozenset(numa_topology.core_to_node[core_id] for core_id in self.bound_cores)
-
+    
         # FIXME: hard coded
         if len(sockets) is not 1:
             raise NotImplementedError(f'Workload spans multiple sockets. {sockets}')
         else:
             return next(iter(sockets))
-
+    """
     def pause(self) -> None:
         self._proc_info.suspend()
         self._perf_info.suspend()
