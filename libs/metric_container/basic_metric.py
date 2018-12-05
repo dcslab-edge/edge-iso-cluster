@@ -83,8 +83,11 @@ class BasicMetric:
 
 
 class MetricDiff:
-    # FIXME: hard coded
-    _MAX_MEM_BANDWIDTH_PS = 68 * 1024 * 1024 * 1024
+    # FIXME: hard coded (CPU -> SDC Node, In. GPU -> Jetson TX2 Node)
+    if NODE_TYPE == NodeType.IntegratedGPU:
+        _MAX_MEM_BANDWIDTH_PS = 50 * 1024 * 1024 * 1024     ## MemBW specified in Jetson TX2 docs
+    if NODE_TYPE == NodeType.CPU:
+        _MAX_MEM_BANDWIDTH_PS = 24 * 1024 * 1024 * 1024     ## MemBW measured by Intel VTune
 
     def __init__(self, curr: BasicMetric, prev: BasicMetric, core_norm: float = 1) -> None:
         self._llc_hit_ratio = curr.llc_hit_ratio - prev.llc_hit_ratio
