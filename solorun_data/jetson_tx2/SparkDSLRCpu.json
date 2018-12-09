@@ -1,0 +1,12 @@
+{
+    "name": "SparkDSLRCpu",
+    "runtime": 30.45902967453003,
+    "llc_references": 159890143.43333334,
+    "llc_misses": 1318937109.4333334,
+    "instructions": 3034634088.6,
+    "cycles": 5269113820.266666,
+    "gpu_core_util": 0,
+    "gpu_core_freq": 1300,
+    "gpu_emc_util": 2.7666666666666666,
+    "gpu_emc_freq": 1866
+}

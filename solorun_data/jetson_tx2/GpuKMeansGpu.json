@@ -1,0 +1,12 @@
+{
+    "name": "GpuKMeansGpu",
+    "runtime": 45.47286319732666,
+    "llc_references": 180111177.4888889,
+    "llc_misses": 1470470000,
+    "instructions": 3346822200.7555556,
+    "cycles": 5888852622.0222225,
+    "gpu_core_util": 0,
+    "gpu_core_freq": 1300,
+    "gpu_emc_util": 3.8222222222222224,
+    "gpu_emc_freq": 1866
+}

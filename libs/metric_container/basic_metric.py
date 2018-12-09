@@ -16,46 +16,58 @@ elif NODE_TYPE == NodeType.CPU:
 
 
 class BasicMetric:
-    def __init__(self, llc_reference, llc_miss, inst, cycles, gpu_core_util, gpu_mem_util, interval):
-        self._llc_reference = llc_reference
-        self._llc_miss = llc_miss
+    def __init__(self, llc_references, llc_misses, inst, cycles, gpu_core_util, gpu_core_freq, gpu_emc_util, gpu_emc_freq, interval):
+        self._llc_references = llc_references
+        self._llc_misses = llc_misses
         self._instructions = inst
         self._cycles = cycles
         self._gpu_core_util = gpu_core_util
-        self._gpu_mem_util = gpu_mem_util
+        self._gpu_core_freq = gpu_core_freq
+        self._gpu_emc_util = gpu_emc_util
+        self._gpu_emc_freq = gpu_emc_freq
         self._interval = interval
 
     @classmethod
     def calc_avg(cls, metrics: Iterable['BasicMetric']) -> 'BasicMetric':
         return BasicMetric(
-                mean(metric._llc_reference for metric in metrics),
-                mean(metric._llc_miss for metric in metrics),
+                mean(metric._llc_references for metric in metrics),
+                mean(metric._llc_misses for metric in metrics),
                 mean(metric._instructions for metric in metrics),
                 mean(metric._cycles for metric in metrics),
                 mean(metric._gpu_core_util for metric in metrics),
-                mean(metric._gpu_mem_util for metric in metrics),
+                mean(metric._gpu_core_freq for metric in metrics),
+                mean(metric._gpu_emc_util for metric in metrics),
+                mean(metric._gpu_emc_freq for metric in metrics),
                 mean(metric._interval for metric in metrics),
         )
 
     @property
-    def llc_reference(self):
-        return self._llc_reference
+    def llc_references(self):
+        return self._llc_references
 
     @property
-    def llc_miss(self):
-        return self._llc_miss
+    def llc_misses(self):
+        return self._llc_misses
 
     @property
     def gpu_core_util(self):
         return self._gpu_core_util
 
     @property
+    def gpu_core_freq(self):
+        return self._gpu_core_freq
+
+    @property
     def gpu_mem_util(self):
-        return self._gpu_mem_util
+        return self._gpu_emc_util
+
+    @property
+    def gpu_emc_freq(self):
+        return self._gpu_emc_freq
 
     @property
     def llc_miss_ps(self) -> float:
-        return self._llc_miss * (1000 / self._interval)
+        return self._llc_misses * (1000 / self._interval)
 
     @property
     def instruction(self):
@@ -71,15 +83,15 @@ class BasicMetric:
 
     @property
     def llc_miss_ratio(self) -> float:
-        return self._llc_miss / self._llc_reference if self._llc_reference != 0 else 0
+        return self._llc_misses / self._llc_references if self._llc_references != 0 else 0
 
     @property
     def llc_hit_ratio(self) -> float:
-        return 1 - self._llc_miss / self._llc_miss if self._llc_reference != 0 else 0
+        return 1 - self._llc_misses / self._llc_misses if self._llc_references != 0 else 0
 
     def __repr__(self) -> str:
         return ', '.join(map(str, (
-            self._llc_reference, self._llc_miss, self._instructions, self._cycles, self._interval)))
+            self._llc_references, self._llc_misses, self._instructions, self._cycles, self._interval)))
 
 
 class MetricDiff:
