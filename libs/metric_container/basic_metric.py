@@ -91,7 +91,9 @@ class BasicMetric:
 
     def __repr__(self) -> str:
         return ', '.join(map(str, (
-            self._llc_references, self._llc_misses, self._instructions, self._cycles, self._interval)))
+            self._llc_references, self._llc_misses, self._instructions, self._cycles,
+            self._gpu_core_util, self._gpu_core_freq, self._gpu_emc_util, self._gpu_emc_freq,
+            self._interval)))
 
 
 class MetricDiff:

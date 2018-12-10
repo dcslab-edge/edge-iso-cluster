@@ -55,8 +55,10 @@ class PollingThread(Thread, metaclass=Singleton):
         item = wl_identifier.split('_')
         wl_name = item[0]
 
+        print("_cbk_wl_creation 1")
         if not psutil.pid_exists(pid):
             return
+        print("_cbk_wl_creation 2")
 
         workload = Workload(wl_name, wl_type, pid, perf_pid, perf_interval)
         if wl_type == 'bg':
@@ -74,6 +76,7 @@ class PollingThread(Thread, metaclass=Singleton):
                         ch: BlockingChannel, method: Basic.Deliver, _: BasicProperties, body: bytes) -> None:
         metric = json.loads(body.decode())
         ch.basic_ack(method.delivery_tag)
+
         if self._node_type == NodeType.IntegratedGPU:
             item = BasicMetric(metric['llc_references'],
                                metric['llc_misses'],
