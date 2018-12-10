@@ -1,0 +1,12 @@
+{
+    "name": "GpuKMeansBatchCpu",
+    "runtime": 238.56361079216003,
+    "llc_references": 172473708.3067227,
+    "llc_misses": 2083174772.432773,
+    "instructions": 5100112289.264706,
+    "cycles": 6118768786.315126,
+    "gpu_core_util": 0,
+    "gpu_core_freq": 1300,
+    "gpu_emc_util": 6.428571428571429,
+    "gpu_emc_freq": 1866
+}

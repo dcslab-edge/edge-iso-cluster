@@ -109,6 +109,7 @@ class Controller:
         logger = logging.getLogger(__name__)
 
         # set pending workloads as active
+        print(f'len of pending queue: {len(self._pending_queue)}')
         while len(self._pending_queue):
             pending_group: IsolationPolicy = self._pending_queue.pop()
             logger.info(f'{pending_group} is created')

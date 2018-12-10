@@ -4,8 +4,8 @@ import subprocess
 from pathlib import Path
 from typing import ClassVar, Iterable
 
-from libs.utils.cgroup import CpuSet
-from libs.utils.machine_type import NodeType, ArchType, MachineChecker
+from .cgroup.cpuset import CpuSet
+from .machine_type import NodeType, ArchType, MachineChecker
 
 
 class GPUDVFS:
@@ -38,24 +38,13 @@ class GPUDVFS:
     def get_freq_range():
         return GPUDVFS.FREQ_RANGE
 
-    def set_freq_cgroup(self, target_freq: int):
-        """
-        Set the frequencies to current cgroup cpusets
-        :param target_freq: freq. to set to cgroup cpuset
-        :return:
-        """
-        GPUDVFS.set_freq(target_freq, self._cur_cgroup.read_cpus())
-
     @staticmethod
-    def set_freq(freq: int, cores: Iterable[int]) -> None:
+    def set_freq(target_freq: int) -> None:
         """
         Set the freq. to the specified cores
-        :param freq: freq. to set
-        :param cores:
+        :param target_freq: freq. to set
         :return:
         """
         # GPU Path /sys/devices/17000000.gp10b/devfreq/17000000.gp10b/userspace/set_freq
-        for core in cores:
-            subprocess.run(args=('sudo', 'tee',
-                                 f'/sys/devices/17000000.gp10b/devfreq/17000000.gp10b/userspace/set_freq'),
-                           check=True, input=f'{freq}\n', encoding='ASCII', stdout=subprocess.DEVNULL)
+        subprocess.run(args=('sudo', 'tee', f'/sys/devices/17000000.gp10b/devfreq/17000000.gp10b/userspace/set_freq'),
+                       check=True, input=f'{target_freq}\n', encoding='ASCII', stdout=subprocess.DEVNULL)

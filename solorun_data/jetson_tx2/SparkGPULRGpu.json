@@ -1,0 +1,12 @@
+{
+    "name": "SparkGPULRGpu",
+    "runtime": 27.469014167785645,
+    "llc_references": 172654701.74074075,
+    "llc_misses": 1408056082.7037036,
+    "instructions": 3217737014.4814816,
+    "cycles": 5544819714.296296,
+    "gpu_core_util": 0,
+    "gpu_core_freq": 1300,
+    "gpu_emc_util": 2.962962962962963,
+    "gpu_emc_freq": 1866
+}

@@ -14,6 +14,7 @@ from pika.spec import Basic
 from libs.metric_container.basic_metric import BasicMetric
 from libs.workload import Workload
 from pending_queue import PendingQueue
+from libs.utils.machine_type import MachineChecker, NodeType
 
 
 class Singleton(type):
@@ -29,6 +30,7 @@ class PollingThread(Thread, metaclass=Singleton):
     def __init__(self, metric_buf_size: int, pending_queue: PendingQueue) -> None:
         super().__init__(daemon=True)
         self._metric_buf_size = metric_buf_size
+        self._node_type = MachineChecker.get_node_type()
 
         self._rmq_host = 'localhost'
         self._rmq_creation_queue = 'workload_creation'
@@ -53,8 +55,10 @@ class PollingThread(Thread, metaclass=Singleton):
         item = wl_identifier.split('_')
         wl_name = item[0]
 
+        print("_cbk_wl_creation 1")
         if not psutil.pid_exists(pid):
             return
+        print("_cbk_wl_creation 2")
 
         workload = Workload(wl_name, wl_type, pid, perf_pid, perf_interval)
         if wl_type == 'bg':
@@ -73,18 +77,26 @@ class PollingThread(Thread, metaclass=Singleton):
         metric = json.loads(body.decode())
         ch.basic_ack(method.delivery_tag)
 
-        item = BasicMetric(metric['l2miss'],
-                           metric['l3miss'],
-                           metric['instructions'],
-                           metric['cycles'],
-                           metric['stall_cycles'],
-                           metric['wall_cycles'],
-                           metric['intra_coh'],
-                           metric['inter_coh'],
-                           metric['llc_size'],
-                           metric['local_mem'],
-                           metric['remote_mem'],
-                           workload.perf_interval)
+        if self._node_type == NodeType.IntegratedGPU:
+            item = BasicMetric(metric['llc_references'],
+                               metric['llc_misses'],
+                               metric['instructions'],
+                               metric['cycles'],
+                               metric['gpu_core_util'],
+                               metric['gpu_core_freq'],
+                               metric['gpu_emc_util'],
+                               metric['gpu_emc_freq'],
+                               workload.perf_interval)
+        if self._node_type == NodeType.CPU:
+            item = BasicMetric(metric['llc_references'],
+                               metric['llc_misses'],
+                               metric['instructions'],
+                               metric['cycles'],
+                               0,
+                               0,
+                               0,
+                               0,
+                               workload.perf_interval)
 
         logger = logging.getLogger(f'monitoring.metric.{workload}')
         logger.debug(f'{metric} is given from ')
