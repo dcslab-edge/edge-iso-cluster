@@ -26,12 +26,12 @@ class IsolationPolicy(metaclass=ABCMeta):
         if self._node_type == NodeType.CPU:
             self._isolator_map: Dict[Type[Isolator], Isolator] = dict((
                 (CycleLimitIsolator, CycleLimitIsolator(self._fg_wl, self._bg_wl)),
-                (FreqThrottleIsolator, FreqThrottleIsolator(self._fg_wl, self._bg_wl)),
+                (SchedIsolator, SchedIsolator(self._fg_wl, self._bg_wl)),
             ))
         if self._node_type == NodeType.IntegratedGPU:
             self._isolator_map: Dict[Type[Isolator], Isolator] = dict((
                 (CycleLimitIsolator, CycleLimitIsolator(self._fg_wl, self._bg_wl)),
-                (SchedIsolator, SchedIsolator(self._fg_wl, self._bg_wl)),
+                (FreqThrottleIsolator, FreqThrottleIsolator(self._fg_wl, self._bg_wl)),
             ))
         self._cur_isolator: Isolator = IsolationPolicy._IDLE_ISOLATOR
         self._in_solorun_profile: bool = False

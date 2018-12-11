@@ -45,11 +45,11 @@ class FreqThrottleIsolator(Isolator):
         logger = logging.getLogger(__name__)
         logger.info(f'frequency of bound_cores {self._background_wl.bound_cores} is {self._cur_step / 1_000_000}GHz')
         freq = self._gpufreq_range[self._cur_step]
-        GPUDVFS.set_freq(freq, self._background_wl.bound_cores)
+        GPUDVFS.set_freq(freq)
 
     def reset(self) -> None:
         max_freq = self._gpufreq_range[GPUDVFS.MAX_IDX]
-        GPUDVFS.set_freq(max_freq, self._background_wl.orig_bound_cores)
+        GPUDVFS.set_freq(max_freq)
 
     def store_cur_config(self) -> None:
         self._stored_config = self._cur_step

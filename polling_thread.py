@@ -45,10 +45,10 @@ class PollingThread(Thread, metaclass=Singleton):
         logger = logging.getLogger('monitoring.workload_creation')
         logger.debug(f'{arr} is received from workload_creation queue')
 
-        if len(arr) != 5:
+        if len(arr) != 7:
             return
 
-        wl_identifier, wl_type, pid, perf_pid, perf_interval = arr
+        wl_identifier, wl_type, pid, perf_pid, perf_interval, tegra_pid, tegra_interval = arr
         pid = int(pid)
         perf_pid = int(perf_pid)
         perf_interval = int(perf_interval)
@@ -76,7 +76,6 @@ class PollingThread(Thread, metaclass=Singleton):
                         ch: BlockingChannel, method: Basic.Deliver, _: BasicProperties, body: bytes) -> None:
         metric = json.loads(body.decode())
         ch.basic_ack(method.delivery_tag)
-
         if self._node_type == NodeType.IntegratedGPU:
             item = BasicMetric(metric['llc_references'],
                                metric['llc_misses'],
@@ -117,7 +116,7 @@ class PollingThread(Thread, metaclass=Singleton):
 
         try:
             logger = logging.getLogger('monitoring')
-            logger.debug('starting consuming thread')
+            logger.info('starting consuming thread')
             channel.start_consuming()
 
         except KeyboardInterrupt:
