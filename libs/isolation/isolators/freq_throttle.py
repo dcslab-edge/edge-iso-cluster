@@ -15,7 +15,7 @@ class FreqThrottleIsolator(Isolator):
 
         # FIXME: hard coded
         # Assumption: FG is latency-sensitive process (CPU) and BG is compute-intensive process (GPU)
-        self._cur_step: int = DVFS.MAX_IDX
+        self._cur_step: int = GPUDVFS.MAX_IDX
         self._stored_config: Optional[int] = None
         self._gpufreq_range = GPUDVFS.get_freq_range()
 
@@ -43,8 +43,8 @@ class FreqThrottleIsolator(Isolator):
 
     def enforce(self) -> None:
         logger = logging.getLogger(__name__)
-        logger.info(f'frequency of bound_cores {self._background_wl.bound_cores} is {self._cur_step / 1_000_000}GHz')
         freq = self._gpufreq_range[self._cur_step]
+        logger.info(f'frequency of bound_cores {self._background_wl.bound_cores} is {freq / 1_000_000_000}GHz')
         GPUDVFS.set_freq(freq)
 
     def reset(self) -> None:

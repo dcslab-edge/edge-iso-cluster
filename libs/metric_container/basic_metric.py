@@ -87,7 +87,7 @@ class BasicMetric:
 
     @property
     def llc_hit_ratio(self) -> float:
-        return 1 - self._llc_misses / self._llc_misses if self._llc_references != 0 else 0
+        return 1 - self._llc_misses / self._llc_references if self._llc_references != 0 else 0
 
     def __repr__(self) -> str:
         return ', '.join(map(str, (
