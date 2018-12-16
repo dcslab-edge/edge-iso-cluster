@@ -16,7 +16,7 @@ from pending_job_queue import PendingJobQueue
 from polling_thread import PollingThread
 from libs.node import Node
 from libs.jobs import Job
-from .node_tracker import NodeTracker
+from node_tracker import NodeTracker
 
 MIN_PYTHON = (3, 6)
 
@@ -39,7 +39,7 @@ class ClusterScheduler:
         """
         logger = logging.getLogger(__name__)
         job_queue = self._pending_job_queue
-        while len(job_queue):
+        while len(job_queue) > 0:
             if job_queue.lat_jobs > 0:
                 pending_latency_job: Job = self._pending_job_queue.pop('latency')
                 logger.info(f'{pending_latency_job} is created')
@@ -64,7 +64,8 @@ class ClusterScheduler:
         dest_node: Node = self._node_tracker.min_aggr_cont_node
         job.dest_ip = dest_node.ip_addr
         job.dest_port = dest_node.port
-        logger.info(f'{job.name} is dispatched to the host {dest_node.ip_addr}')
+        logger.info(f'{job.name} is dispatched to the {job.type} host-{dest_node.ip_addr}')
+        # FIXME: socket communication is blocking-based. It should be fixed in non-blocking manner
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
             s.connect((dest_node.ip_addr, dest_node.port))
             data = f'{job.name},{job.type},{job.preferences}'

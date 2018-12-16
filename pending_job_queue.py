@@ -6,7 +6,7 @@ from libs.jobs import Job
 
 
 class PendingJobQueue(Sized):
-    def __init__(self) -> None:
+    def __init__(self):
 
         self._pending_list_latency: List[Job] = list()      # pending latency-critical workload pairs
         self._pending_list_throughput: List[Job] = list()   # pending throughput-oriented workload pairs
@@ -14,8 +14,11 @@ class PendingJobQueue(Sized):
     def __len__(self) -> int:
         num_lat_job = len(self._pending_list_latency)
         num_thr_job = len(self._pending_list_throughput)
+        num_of_pending_jobs = num_lat_job + num_thr_job
         if num_lat_job > 0 or num_thr_job > 0:
             num_of_pending_jobs = num_lat_job + num_thr_job
+            return num_of_pending_jobs
+        else:
             return num_of_pending_jobs
 
     @property
