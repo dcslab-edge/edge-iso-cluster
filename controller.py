@@ -8,7 +8,7 @@ import os
 import subprocess
 import sys
 import time
-from typing import Dict, Optional
+from typing import Dict, Optional, Type
 
 import psutil
 
@@ -17,15 +17,18 @@ from libs.isolation import NextStep
 from libs.isolation.isolators import Isolator
 from libs.isolation.policies import EdgePolicy, IsolationPolicy
 # from libs.isolation.swapper import SwapIsolator
-from pending_queue import PendingQueue
+from pending_job_queue import PendingJobQueue
 from polling_thread import PollingThread
+from libs.node import Node
+from .node_tracker import NodeTracker
 
 MIN_PYTHON = (3, 6)
 
 
 class Controller:
     def __init__(self, metric_buf_size: int) -> None:
-        self._pending_queue: PendingQueue = PendingQueue(EdgePolicy)
+        #self._pending_queue: PendingQueue = PendingQueue(EdgePolicy)
+        self._pending_job_queue: PendingJobQueue = PendingJobQueue()
 
         self._interval: float = 0.2  # scheduling interval (sec)
         self._profile_interval: float = 1.0  # check interval for phase change (sec)
@@ -34,14 +37,27 @@ class Controller:
 
         self._isolation_groups: Dict[IsolationPolicy, int] = dict()
 
-        self._polling_thread = PollingThread(metric_buf_size, self._pending_queue)
+        self._polling_thread = PollingThread(metric_buf_size, self._pending_job_queue)
+        self._node_tracker = NodeTracker(metric_buf_size=50)  # aggr_metric_bufsize is initially set to 50
 
-        # Swapper init
-        # self._swapper: SwapIsolator = SwapIsolator(self._isolation_groups)
+    def _dispatch_jobs(self) -> None:
+        """
+        This function checks the pending jobs and if there any pending jobs, then dispatch it to least cont node
+        :return:
+        """
+        logger = logging.getLogger(__name__)
+        while len(self._pending_job_queue):
+            pending_group: IsolationPolicy = self._pending_job_queue.pop()
+            logger.info(f'{pending_group} is created')
 
+            self._isolation_groups[pending_group] = 0
+
+
+
+    """
     def _isolate_workloads(self) -> None:
         logger = logging.getLogger(__name__)
-
+        
         for group, iteration_num in self._isolation_groups.items():
             logger.info('')
             logger.info(f'***************isolation of {group.name} #{iteration_num}***************')
@@ -96,11 +112,7 @@ class Controller:
 
             finally:
                 self._isolation_groups[group] += 1
-        """
-        if len(tuple(g for g in self._isolation_groups if g.safe_to_swap)) >= 2:
-            if self._swapper.swap_is_needed():
-                self._swapper.do_swap()
-        """
+    """
 
     def _register_pending_workloads(self) -> None:
         """
@@ -145,13 +157,16 @@ class Controller:
 
         logger = logging.getLogger(__name__)
         logger.info('starting isolation loop')
-
+        #NodeTracker.setup_cluster_nodes()
         while True:
-            self._remove_ended_groups()
-            self._register_pending_workloads()
+            #self._remove_ended_groups()
+            #self._register_pending_workloads()
+            #NodeTracker.update_node_contention()
+            #NodeTracker.find_min_aggr_cont_node()
+            self._dispatch_jobs()
 
             time.sleep(self._interval)
-            self._isolate_workloads()
+            #self._isolate_workloads()
 
 
 def main() -> None:
