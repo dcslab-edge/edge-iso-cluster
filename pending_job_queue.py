@@ -18,6 +18,14 @@ class PendingJobQueue(Sized):
             num_of_pending_jobs = num_lat_job + num_thr_job
             return num_of_pending_jobs
 
+    @property
+    def lat_jobs(self):
+        return len(self._pending_list_latency)
+
+    @property
+    def thr_jobs(self):
+        return len(self._pending_list_throughput)
+
     def add(self, job: Job):
         logger = logging.getLogger('pending')
         logger.info(f'Job ({job.name}) is added...')

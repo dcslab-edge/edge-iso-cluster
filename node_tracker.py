@@ -13,9 +13,7 @@ from pika.adapters.blocking_connection import BlockingChannel
 from pika.spec import Basic
 
 from libs.metric_container.basic_metric import BasicMetric
-from libs.workload import Workload
 from libs.node import Node
-from libs.utils.machine_type import MachineChecker, NodeType
 
 
 class Singleton(type):
@@ -31,15 +29,13 @@ class NodeTracker(Thread, metaclass=Singleton):
     def __init__(self, metric_buf_size: int) -> None:
         super().__init__(daemon=True)
         self._metric_buf_size = metric_buf_size
-        #self._node_type = MachineChecker.get_node_type()
 
         self._rmq_host = 'localhost'
         self._rmq_tracking_node_queue = 'tracking_nodes'    # edge-profiler should use this queue
 
         self._cluster_nodes: Dict[str, Node] = dict()
         self._node_contentions: Dict[Node, float] = None
-        self._min_aggr_cont_node = None
-
+        self._min_aggr_cont_node: Node = None
 
     @property
     def cluster_nodes(self):
@@ -74,6 +70,7 @@ class NodeTracker(Thread, metaclass=Singleton):
             self._node_contentions[node] = node.aggr_contention()
 
     def find_min_aggr_cont_node(self) -> None:
+        self.update_node_contention()
         min_cont_node = None
         min_cont = None
         for node, node_cont in self._node_contentions.items():
@@ -88,7 +85,8 @@ class NodeTracker(Thread, metaclass=Singleton):
 
     # Tracking nodes related ...
 
-    def _cbk_connecting_nodes(self, ch: BlockingChannel, method: Basic.Deliver, _: BasicProperties, body: bytes) -> None:
+    def _cbk_connecting_nodes(self, ch: BlockingChannel, method: Basic.Deliver, _: BasicProperties, body: bytes) \
+            -> None:
         ch.basic_ack(method.delivery_tag)
 
         arr = body.decode().strip().split(',')
@@ -113,17 +111,16 @@ class NodeTracker(Thread, metaclass=Singleton):
         tracked_node.num_of_bg_wls = num_of_bg_wls
         tracked_node.node_type = node_type
 
-        #self.monitor_workloads.add(workload, max_wls)
-
         node_queue_name = '{}_node_({})'.format(tracked_node.node_type, tracked_node.ip_addr)
         ch.queue_declare(node_queue_name)
         ch.basic_consume(functools.partial(self._cbk_node_monitor, tracked_node), node_queue_name)
 
     def _cbk_node_monitor(self, node: Node,
-                        ch: BlockingChannel, method: Basic.Deliver, _: BasicProperties, body: bytes) -> None:
+                          ch: BlockingChannel, method: Basic.Deliver, _: BasicProperties, body: bytes) -> None:
         metric = json.loads(body.decode())      # Through json format, node monitor can get aggr contention info
         ch.basic_ack(method.delivery_tag)
 
+        # FIXME: Hard coded (200ms as interval)
         item = BasicMetric(metric['llc_references'],
                            metric['llc_misses'],
                            metric['instructions'],
@@ -152,8 +149,8 @@ class NodeTracker(Thread, metaclass=Singleton):
         channel.basic_consume(self._cbk_connecting_nodes, self._rmq_tracking_node_queue)
 
         try:
-            logger = logging.getLogger('monitoring')
-            logger.info('starting consuming thread')
+            logger = logging.getLogger('tracking')
+            logger.info('starting node tracker thread')
             channel.start_consuming()
 
         except KeyboardInterrupt:
