@@ -64,7 +64,7 @@ class ClusterScheduler:
         dest_node: Node = self._node_tracker.min_aggr_cont_node
         job.dest_ip = dest_node.ip_addr
         job.dest_port = dest_node.port
-
+        logger.info(f'{job.name} is dispatched to the host {dest_node.ip_addr}')
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
             s.connect((dest_node.ip_addr, dest_node.port))
             data = f'{job.name},{job.type},{job.preferences}'
