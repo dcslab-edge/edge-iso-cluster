@@ -43,40 +43,15 @@ class JobSubmitter:
 
     @staticmethod
     def do_submit(job_request: str):
-        RabbitMQHandler(job_request)
+        connection = pika.BlockingConnection(pika.ConnectionParameters(host='localhost'))
+        channel: BlockingChannel = connection.channel()
 
-
-class RabbitMQHandler(Handler):
-    def __init__(self, job_request: str):
-        super().__init__()
-        # TODO: upgrade to async version
-        self._connection = pika.BlockingConnection(pika.ConnectionParameters(host='localhost'))
-        self._channel: BlockingChannel = self._connection.channel()
-
-        self._queue_name: str = f'job_submission'
-        self._channel.queue_declare(queue=self._queue_name)
+        queue_name: str = f'job_submission'
+        channel.queue_declare(queue=queue_name)
 
         # Send job description to cluster scheduler's polling thread
-        self._channel.queue_declare(queue=self._queue_name)
-        self._channel.basic_publish(exchange='', routing_key=self._queue_name,
-                                    body=job_request)
-
-    def emit(self, record: LogRecord):
-        formatted: str = self.format(record)
-
-        self._channel.basic_publish(exchange='', routing_key=self._queue_name, body=formatted)
-
-    def close(self):
-        super().close()
-        try:
-            self._channel.queue_delete(self._queue_name)
-        except:
-            pass
-        self._connection.close()
-
-    def __repr__(self):
-        level = logging.getLevelName(self.level)
-        return f'<{self.__class__.__name__} {self._queue_name} ({level})>'
+        channel.queue_declare(queue=queue_name)
+        channel.basic_publish(exchange='', routing_key=queue_name, body=job_request)
 
 
 def main() -> None:
