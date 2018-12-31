@@ -1,0 +1,17 @@
+{
+  "jobs": [
+    {
+      "name": "GpuKMeansBatchGpu",
+      "type": "bg",
+      "preferences": "gpu",
+      "objective": "throughput"
+
+    },
+    {
+      "name": "SparkGPULR",
+      "type": "bg",
+      "preferences": "cpu",
+      "objective": "latency"
+    }
+  ]
+}

@@ -13,6 +13,8 @@ from pathlib import Path
 from logging import Handler, LogRecord
 from pika.adapters.blocking_connection import BlockingChannel
 
+MIN_PYTHON = (3, 6)
+
 
 class JobSubmitter:
     def __init__(self, submit_interval: float):
@@ -26,6 +28,7 @@ class JobSubmitter:
         return self._job_requests
 
     def open_and_parse_config(self):
+        print('open and parse config')
         if not self._job_cfg_file.exists():
             print(f'{self._job_cfg_file.resolve()} is not exist.', file=sys.stderr)
             return False
@@ -40,9 +43,11 @@ class JobSubmitter:
                 job_preferences = job_cfg['preferences']
                 job_objective = job_cfg['objective']
                 job_requests[req_num] = f'{job_name},{job_type},{job_preferences},{job_objective}'
+                self._job_requests = job_requests
 
     @staticmethod
     def do_submit(job_request: str):
+        print(f'do_submit! : {job_request}')
         connection = pika.BlockingConnection(pika.ConnectionParameters(host='localhost'))
         channel: BlockingChannel = connection.channel()
 
@@ -62,7 +67,19 @@ def main() -> None:
     number_of_jobs = len(job_submitter.job_requests)
     left_jobs = number_of_jobs
     req_count = 0
+    print(f'left_jobs: {left_jobs}')
     while left_jobs:
         time.sleep(interval)
         job_req = job_submitter.job_requests[req_count]
         job_submitter.do_submit(job_req)
+        left_jobs -= 1
+        req_count += 1
+        print(f'left_jobs: {left_jobs}')
+
+
+if __name__ == '__main__':
+    if sys.version_info < MIN_PYTHON:
+        sys.exit('Python {}.{} or later is required.\n'.format(*MIN_PYTHON))
+
+    main()
+
