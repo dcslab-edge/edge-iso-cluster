@@ -60,7 +60,7 @@ class JobSubmitter:
 
 
 def main() -> None:
-    interval = 10.0
+    interval = 5.0
     job_submitter = JobSubmitter(submit_interval=interval)
     job_submitter.open_and_parse_config()
 

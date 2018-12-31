@@ -40,9 +40,9 @@ class NodeTracker(Thread, metaclass=Singleton):
         self._gpu_nodes = None
 
         # FIXME: hard coded
-        self._rmq_host = 'sdc2'
+        self._rmq_host = 'jetson2'
         self._rmq_creation_exchanges: Dict[str, str] = dict()
-        self._rmq_tracking_node_queue = 'node_tracking'    # edge-profiler should use this queue
+        #self._rmq_tracking_node_queue = 'node_tracking'            # edge-profiler should use this queue
 
         self._cluster_nodes: Dict[str, Node] = dict()
         self._node_contentions: Dict[Node, BasicMetric] = None
@@ -67,7 +67,7 @@ class NodeTracker(Thread, metaclass=Singleton):
         :return:
         """
         # FIXME: hard coded
-        # Jetson1, Jetson2, SDC1, SDC2
+        # jetson1, jetson2, sdc1, sdc2
         # node_ipaddrs = ['147.46.242.201', '147.46.240.168', '147.46.242.219', '147.46.242.206']
         # node_ports = ['10010']*4
         # gpu_nodes = ['147.46.242.201', '147.46.240.168']
@@ -85,6 +85,7 @@ class NodeTracker(Thread, metaclass=Singleton):
                 node_port = node_cfg['port']                    # port should be pre-defined
                 node_name = node_cfg['hostname']
                 node_type = node_cfg['type']
+                print (f'{node_ipaddr},{node_port},{node_name},{node_type}')
                 if node_type == 'gpu' or node_type == 'GPU':
                     self._gpu_nodes.append(node_ipaddr)
                 elif node_type == 'cpu' or node_type == 'CPU':
@@ -103,16 +104,18 @@ class NodeTracker(Thread, metaclass=Singleton):
         self.update_node_contention()
         min_membw_cont_node = None
         min_membw_cont = None
-        for node, node_cont in self._node_contentions.items():
-            if node.ip_addr in self._cpu_nodes:
-                if min_membw_cont_node is None:
-                    min_membw_cont_node = node
-                    min_membw_cont = node_cont
-                elif min_membw_cont_node is not None:
-                    if min_membw_cont.llc_misses > node_cont.llc_misses:
-                        min_membw_cont_node = node
 
-        self._min_aggr_cont_node = min_membw_cont_node
+        if self._node_contentions is not None:
+            for node, node_cont in self._node_contentions.items():
+                if node.ip_addr in self._cpu_nodes:
+                    if min_membw_cont_node is None:
+                        min_membw_cont_node = node
+                        min_membw_cont = node_cont
+                    elif min_membw_cont_node is not None:
+                        if min_membw_cont.llc_misses > node_cont.llc_misses:
+                            min_membw_cont_node = node
+
+            self._min_aggr_cont_node = min_membw_cont_node
 
     # Tracking nodes related ...
 
@@ -153,13 +156,14 @@ class NodeTracker(Thread, metaclass=Singleton):
         rmq_bench_exchange = f'ex-{node_name}-{wl_name}({pid})'
         ch.exchange_declare(exchange=rmq_bench_exchange, exchange_type='fanout')
         ch.queue_bind(exchange=rmq_bench_exchange, queue=wl_queue_name)
+        print('[node_tracker] _cbk_connecting_nodes')
         ch.basic_consume(functools.partial(self._cbk_node_monitor, node, workload), wl_queue_name)
 
     def _cbk_node_monitor(self, node: Node, workload: Workload,
                           ch: BlockingChannel, method: Basic.Deliver, _: BasicProperties, body: bytes) -> None:
         metric = json.loads(body.decode())      # Through json format, node monitor can get aggr contention info
         ch.basic_ack(method.delivery_tag)
-
+        print('[node_tracker] _cbk_node_monitor')
         # FIXME: Hard coded (200ms as interval)
         if node.node_type == NodeType.IntegratedGPU:
             item = BasicMetric(metric['llc_references'],

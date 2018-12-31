@@ -61,17 +61,20 @@ class ClusterScheduler:
 
     def _do_dispatch_job(self, job: Job) -> None:
         logger = logging.getLogger(__name__)
+        self._node_tracker.find_min_aggr_cont_node()
         dest_node: Node = self._node_tracker.min_aggr_cont_node
-        job.dest_ip = dest_node.ip_addr
-        job.dest_port = dest_node.port
-        logger.info(f'{job.name} is dispatched to the {job.type} host-{dest_node.ip_addr}')
-        # FIXME: socket communication is blocking-based. It should be fixed in non-blocking manner
-        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
-            s.connect((dest_node.ip_addr, dest_node.port))
-            data = f'{job.name},{job.type},{job.preferences}'
-            s.sendall(data.encode())
-            resp = s.recv(1024)
-            logger.info(f'Received from {resp.decode()} {dest_node.ip_addr}:{dest_node.port}!')
+        print(f'dest_node: {dest_node}')
+        if dest_node is not None:
+            job.dest_ip = dest_node.ip_addr
+            job.dest_port = dest_node.port
+            logger.info(f'{job.name} is dispatched to the {job.type} host-{dest_node.ip_addr}')
+            # FIXME: socket communication is blocking-based. It should be fixed in non-blocking manner
+            with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+                s.connect((dest_node.ip_addr, dest_node.port))
+                data = f'{job.name},{job.type},{job.preferences}'
+                s.sendall(data.encode())
+                resp = s.recv(1024)
+                logger.info(f'Received from {resp.decode()} {dest_node.ip_addr}:{dest_node.port}!')
 
     def run(self) -> None:
         self._polling_thread.start()
@@ -118,6 +121,8 @@ def main() -> None:
 
     cluster_scheduler = ClusterScheduler(args.buf_size)
     cluster_scheduler.run()
+    node_tracker = NodeTracker(args.buf_size)
+    node_tracker.run()
 
 
 if __name__ == '__main__':

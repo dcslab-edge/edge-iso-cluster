@@ -30,6 +30,10 @@ class Node:
         return self._ip_addr
 
     @property
+    def port(self):
+        return self._port
+
+    @property
     def node_type(self):
         return self._node_type
 
@@ -113,4 +117,4 @@ class Node:
         # llc_misses is used to estimate MEM BW Contention
         # gpu_core_util is used to estimate GPU Load
         """
-        self._aggr_metric = aggr_metric # update aggr_metric
+        self._aggr_metric = aggr_metric  # update aggr_metric

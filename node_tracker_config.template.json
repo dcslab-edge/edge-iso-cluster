@@ -1,0 +1,30 @@
+{
+  "node": [
+    {
+      "ip": "147.46.242.201",
+      "port": "10010",
+      "hostname": "jetson1",
+      "type": "gpu"
+
+    },
+    {
+      "ip": "147.46.240.168",
+      "port": "10010",
+      "hostname": "jetson2",
+      "type": "gpu"
+
+    },
+    {
+      "ip": "147.46.242.219",
+      "port": "10010",
+      "hostname": "sdc1",
+      "type": "cpu"
+    },
+    {
+      "ip": "147.46.242.206",
+      "port": "10010",
+      "hostname": "sdc2",
+      "type": "cpu"
+    }
+  ]
+}
