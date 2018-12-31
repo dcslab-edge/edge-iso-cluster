@@ -45,6 +45,10 @@ class BasicMetric:
             )
 
     @property
+    def interval(self):
+        return self._interval
+
+    @property
     def llc_references(self):
         return self._llc_references
 
@@ -61,7 +65,7 @@ class BasicMetric:
         return self._gpu_core_freq
 
     @property
-    def gpu_mem_util(self):
+    def gpu_emc_util(self):
         return self._gpu_emc_util
 
     @property
@@ -83,6 +87,10 @@ class BasicMetric:
     @property
     def ipc(self) -> float:
         return self._instructions / self._cycles
+
+    @property
+    def cycle(self):
+        return self._cycles
 
     @property
     def llc_miss_ratio(self) -> float:

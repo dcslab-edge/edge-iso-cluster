@@ -4,14 +4,14 @@
       "name": "GpuKMeansBatchGpu",
       "type": "bg",
       "preferences": "gpu",
-      "objective": "throughput",
+      "objective": "throughput"
 
     },
     {
       "name": "SparkGPULR",
       "type": "bg",
       "preferences": "cpu",
-      "objective": "latency",
+      "objective": "latency"
     }
   ]
 }
